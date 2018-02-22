@@ -1,60 +1,63 @@
-# require 'HTTParty'
 require 'Nokogiri'
 require 'open-uri'
-# require 'JSON'
-# require 'Pry'
-# require 'csv'
-# require 'net/http'
-page = Nokogiri::HTML(open('http://www.imdb.com/search/name?birth_monthday=02-02'))
 
-itemHeader = page.css('h3.lister-item-header')
-name = page.css('h3.lister-item-header')[3].children.children.text.split("\n")[0].split("  ")[1]
+def fetch_data
 
-images = page.css('div.lister-item-image').css('a').css('img')[1].values[2]
+    header = "http://www.imdb.com"
+    
+    page = Nokogiri::HTML(open('http://www.imdb.com/search/name?birth_monthday=02-02'))
 
-link = page.css('h3.lister-item-header')[0].css('a')[0].attributes["href"].value
-header = "http://www.imdb.com"
-# p header + link
+    itemHeader = page.css('h3.lister-item-header')
+    
+    nameCount = itemHeader.length
 
-# page.css('div.lister-item-content')[1] <- this index determines the actress
-itemContentHeader = page.css('div.lister-item-content')
-mostKnownWork = page.css('div.lister-item-content')[0].children[3].children[3].children.text.split("\n")[0]
-# p mostKnownWork = mostKnownWork.slice(1, mostKnownWork.length - 1)
+    nameArr = []
 
-mostKnownWorkUrl = page.css('div.lister-item-content')[1].children[3].children[3].attributes["href"].value
-# header + mostKnownWorkLink
+    itemContentHeader = page.css('div.lister-item-content')
+    i = 0
+    while i < nameCount
 
-page1 = Nokogiri::HTML(open(header + mostKnownWorkUrl))
-rating = page1.css('div.ratingValue')[0].children[1].children.children.text
-# rating = page1.css('div.ratingValue')[0].children[1].children.children.text
+        name = itemHeader[i].children.children.text.split("\n")[0].split("  ")[1]
 
-directorName = page1.css('div.credit_summary_item')[0].children[3].children[1].children[0].children.text
-# directorName = page1.css('div.credit_summary_item')[0].children[3].children[1].children[0].children.text
+        photoURL = page.css('div.lister-item-image').css('a').css('img')[i].values[2]
 
-nameCount = page.css('h3.lister-item-header').length
+        profileURL = header + itemHeader[i].css('a')[0].attributes["href"].value
 
-nameArr = []
+        # MOST KNOWN WORK
 
-i = 0
-while i < nameCount
-    nameArr.push(
-        {
-            "name": itemHeader[i].children.children.text.split("\n")[0].split("  ")[1],
-            "photoUrl": page.css('div.lister-item-image').css('a').css('img')[i].values[2],
-            "profileUrl": header + itemHeader[i].css('a')[0].attributes["href"].value,
-            "mostKnownWork": {
-                "title": itemContentHeader[i].children[3].children[3].children.text.split("\n")[0],
-                "url": header + itemContentHeader[i].children[3].children[3].attributes["href"].value,
-                "rating": rating,
-                "director": directorName,
+        mostKnownWorkTemplate = itemContentHeader.css('p.text-muted').css('a')
+
+        mostKnownWorkLength = mostKnownWorkTemplate.text.split("\n")[0].length
+
+        mostKnownWork = mostKnownWorkTemplate.text.slice(1, mostKnownWorkLength - 1).split("\n")[i]
+
+        mostKnownWorkURL = header + mostKnownWorkTemplate[i].attributes["href"].value
+
+        page1 = Nokogiri::HTML(open(mostKnownWorkURL))
+
+        rating = page1.css('div.ratingValue')[0].children[1].children.children.text
+        
+        p directorName = page1.css('div.credit_summary_item')[0].css('span')[0].css('a').css('span').text
+
+        nameArr.push(
+            {
+                "name": name,
+                "photoUrl": photoURL,
+                "profileUrl": profileURL,
+                "mostKnownWork": {
+                    "title": mostKnownWork,
+                    "url": mostKnownWorkURL,
+                    "rating": rating,
+                    "director": directorName,
+                }
             }
-        }
-    )
-    i += 1
+        )
+        i += 1
+    end
+
+    test = {
+        "people": nameArr,
+    }
 end
 
-test = {
-    "people": nameArr,
-}
-
-nameArr.length
+p fetch_data

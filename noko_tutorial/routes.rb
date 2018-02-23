@@ -4,5 +4,7 @@ load './web_scraper.rb'
 
 get '/' do
     content_type :json
-    fetch_data.to_json
+    {
+        "hello": "hello"
+    }.to_json
 end

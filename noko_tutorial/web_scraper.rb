@@ -1,126 +1,130 @@
 require 'Nokogiri'
 require 'open-uri'
+require 'pry'
 
-STORE = {
-    "page" => Nokogiri::HTML(open('http://www.imdb.com/search/name?birth_monthday=02-02')), # page variables changes if there is a next page
-    "header" => "http://www.imdb.com",
-    "item_header" => Nokogiri::HTML(open('http://www.imdb.com/search/name?birth_monthday=02-02')).css('h3.lister-item-header'),
-    "item_content_header" => Nokogiri::HTML(open('http://www.imdb.com/search/name?birth_monthday=02-02')).css('div.lister-item-content'),
-    "most_known_work_template" => Nokogiri::HTML(open('http://www.imdb.com/search/name?birth_monthday=02-02')).css('div.lister-item-content').css('p.text-muted').css('a'),
-    "most_known_work_length" => Nokogiri::HTML(open('http://www.imdb.com/search/name?birth_monthday=02-02')).css('p.text-muted').css('a').text.split("\n")[0].length,
-    "titles" => Nokogiri::HTML(open('http://www.imdb.com/search/name?birth_monthday=02-02')).css('div.lister-item-content').css('p.text-muted').css('a').text.split("\n").map { |title| title[1..-1] },
-    "name_arr" => [],
-    
-}
+HEADER = "http://www.imdb.com"
 
 def fetch_data
+    page = Nokogiri::HTML(open('http://www.imdb.com/search/name?birth_monthday=02-02&start=646&ref_=rlm'))
+    res_arr = []
+    
+    url = scrape_page(page, res_arr)
+    while next_page?(page)
+        new_url = next_page?(page)
+        page = change_page(new_url)
+        scrape_page(page, res_arr)
+    end
 
     return_obj = {
-        "people": STORE["name_arr"],
+        "people": res_arr
     }
-    
-    scrape_page
-
-    # until next_page?    
-        # if next_page?
-            # change_page
-        # end
-        # scrape_page
-    # end
-
-    return_obj
 end
 
+def scrape_page(page, res_arr)
+    name_arr = scrape_name(page)
+    photo_url_arr = scrape_photo_url(page)
+    profile_url_arr = scrape_profile_url(page)
+    most_known_work_arr = scrape_most_known_work(page)
+    most_known_work_url_arr = scrape_most_known_work_url(page)
 
-def scrape_page
     i = 0
-    name_count = STORE["item_header"].length
-    
-    while i < name_count
+    while i < page.css('div.lister-item').length
+        if most_known_work_arr[i]
+            most_known_work_url = HEADER + most_known_work_url_arr[i]
+            movie_page = fetch_movie_page(most_known_work_url)
+            rating = scrape_rating(movie_page)
+            director = scrape_director(movie_page)
+        else
+            most_known_work_url = nil
+            movie_page = nil
+            rating = nil
+            director = nil
+        end
 
-        name = name(i)
-        photo_url = photo_url(i)
-        profile_URL = profile_URL(i)
-
-        # MOST KNOWN WORK
-        most_known_work = most_known_work(i)
-        most_known_work_URL = most_known_work_URL(i)
-
-        # MOVIE PAGE
-        movie_page = movie_page(most_known_work_URL)
-        rating = rating(movie_page)
-        director = director(movie_page)
-
-        STORE["name_arr"].push(
+        res_arr.push(
             {
-                "name": name,
-                "photoUrl": photo_url,
-                "profileUrl": profile_URL,
-                "most_known_work": {
-                    "title": most_known_work,
-                    "url": most_known_work_URL,
+                "name": name_arr[i],
+                "photoURL": photo_url_arr[i],
+                "profileURL": HEADER + profile_url_arr[i],
+                "mostKnownWork": {
+                    "title": most_known_work_arr[i],
+                    "url": most_known_work_url,
                     "rating": rating,
                     "director": director,
                 }
             }
         )
+        p res_arr[-1]
+
         i += 1
     end
-
-    
 end
 
-def next_page?
-    url = STORE["page"].css('a.lister-page-next')[0].attributes["href"].value
-    if url
-        # change_page(STORE[header] + url)
-        puts "it works"
+def next_page?(page)
+    url = page.css('a.lister-page-next')
+    if url.empty?
+        return nil
     else
-        puts "it doesnt work"
+        url[0].attributes["href"].value
     end
 end
 
 def change_page(new_url)
-    
+    Nokogiri::HTML(open(HEADER + new_url))
 end
 
-def director(movie_page)
-    movie_page.css('div.credit_summary_item')[0].css('span')[0].css('a').css('span').text
+def scrape_name(page)
+    page.css('div.lister-item').css('h3.lister-item-header').css('a').text.split("\n").map { |name| name[1..-1]}
 end
 
-def rating(movie_page)
-    movie_page.css('div.ratingValue')[0].children[1].children.children.text
+def scrape_profile_url(page)
+    page.css('div.lister-item').css('h3.lister-item-header').map do |url|
+        url.css('a')[0].attributes["href"].value
+    end
 end
 
-def movie_page(most_known_work_URL)
-    Nokogiri::HTML(open(most_known_work_URL))
+def scrape_photo_url(page)
+    page.css('div.lister-item').css('div.lister-item-image').css('a').css('img').map do |url|
+        url.attributes['src'].value
+    end
 end
 
-def most_known_work_URL(i)
-    STORE["header"] + STORE["most_known_work_template"][i].attributes["href"].value
+def scrape_most_known_work(page)
+    page.css('div.lister-item').css('div.lister-item-content').map do |title|
+        if title == []
+            nil
+        else
+            title.css("p.text-muted").css("a").children.text[1..-2]
+        end
+    end
 end
 
-def name(i)
-    STORE["item_header"][i].children.children.text.split("\n")[0].split("  ")[1]
+def scrape_most_known_work_url(page)
+    page.css('div.lister-item').css('div.lister-item-content').map do |url|
+        if url.css("p.text-muted").empty?
+            nil
+        else
+            url.css("a")[1].attributes["href"].value
+        end
+    end
 end
 
-def photo_url(i)
-    STORE["page"].css('div.lister-item-image').css('a').css('img')[i].values[2]
+def fetch_movie_page(most_known_work_url)
+    Nokogiri::HTML(open(most_known_work_url))
 end
 
-# def photo_url(i)
-#     STORE["header"] + STORE["item_header"][i].css('a')[0].attributes["href"].value
-# end
-
-def most_known_work(i)
-    STORE["titles"][i]
+def scrape_rating(movie_page)
+    if movie_page.css('div.ratingValue')[0]
+        movie_page.css('div.ratingValue')[0].children[1].children.children.text
+    else 
+        nil
+    end
 end
 
-def profile_URL(i)
-    STORE["header"] + STORE["item_header"][i].css('a')[0].attributes["href"].value
+def scrape_director(movie_page)
+    if movie_page.css('div.credit_summary_item')[0].css('span').empty?
+        nil
+    else
+        movie_page.css('div.credit_summary_item')[0].css('span')[0].css('a').css('span').text
+    end
 end
-
-p fetch_data
-
-# len = Nokogiri::HTML(open('http://www.imdb.com/search/name?birth_monthday=02-02')).css('p.text-muted').css('a').text.split("\n")[1].length
-# .slice(1, len).split("\n")[1]

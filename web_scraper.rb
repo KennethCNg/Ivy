@@ -4,6 +4,8 @@ require 'pry'
 
 HEADER = "http://www.imdb.com"
 
+
+# main function that delegates scraping to 'def scrape_page'
 def fetch_data(month, day)
     page = Nokogiri::HTML(open("http://www.imdb.com/search/name?birth_monthday=#{month}-#{day}"))
     res_arr = []
@@ -15,6 +17,7 @@ def fetch_data(month, day)
         scrape_page(page, res_arr)
     end
 
+    # this is the obj that will be turned to json
     return_obj = {
         "people": res_arr
     }
@@ -54,12 +57,16 @@ def scrape_page(page, res_arr)
                 }
             }
         )
+        
         p res_arr[-1]
 
         i += 1
     end
 end
 
+# HELPER METHODS
+
+# checks for "next link on the page"
 def next_page?(page)
     url = page.css('a.lister-page-next')
     if url.empty?
@@ -69,10 +76,13 @@ def next_page?(page)
     end
 end
 
+# changes the page if next_page? returns true
 def change_page(new_url)
     Nokogiri::HTML(open(HEADER + new_url))
 end
 
+
+# HELPER METHODS BELOW ACTUALLY DO THE SCRAPING
 def scrape_name(page)
     page.css('div.lister-item').css('h3.lister-item-header').css('a').text.split("\n").map { |name| name[1..-1]}
 end

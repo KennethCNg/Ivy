@@ -11,7 +11,8 @@ This project was a coding challenge. Given a month and date, the script should r
         mostKnownWork: { 
             title: "Prince of Persia: The Sands of Time", 
             url: "http://www.imdb.com/title/tt0473075/", 
-            rating: 6.6, director: "Louis Leterrier" 
+            rating: 6.6, 
+            director: "Louis Leterrier" 
         } 
     }, ... ] 
 } 

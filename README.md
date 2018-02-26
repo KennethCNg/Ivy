@@ -2,7 +2,22 @@
 
 This project was a coding challenge. Given a month and date, the script should return a JSON object of all actors/actress with the respective birthday in this format:
 
-{ people: [ { name: "Gemma Arterton", photoUrl: "https://images-na.ssl-images-amazon.com/images/M/MV5BOTAwNTMwMzE5OF5BMl5BanBnXkFtZTgwMjYwNzI2MjE@._V1_UX140_CR0,0,140,209_AL_.jpg", profileUrl: "http://www.imdb.com/name/nm2605345", mostKnownWork: { title: "Prince of Persia: The Sands of Time", url: "http://www.imdb.com/title/tt0473075/", rating: 6.6, director: "Louis Leterrier" } }, ... ] } 
+```js
+{ people: 
+    [ { 
+        name: "Gemma Arterton", 
+        photoUrl: "https://images-na.ssl-images-amazon.com/images/M/MV5BOTAwNTMwMzE5OF5BMl5BanBnXkFtZTgwMjYwNzI2MjE@._V1_UX140_CR0,0,140,209_AL_.jpg", 
+        profileUrl: "http://www.imdb.com/name/nm2605345",
+        mostKnownWork: { 
+            title: "Prince of Persia: The Sands of Time", 
+            url: "http://www.imdb.com/title/tt0473075/", 
+            rating: 6.6, director: "Louis Leterrier" 
+        } 
+    }, ... ] 
+} 
+```
+
+The data is scraped from IMDB.
 
 ### Get Started
 

@@ -4,7 +4,6 @@ require 'pry'
 
 HEADER = "http://www.imdb.com"
 
-
 # main function that delegates scraping to 'def scrape_page'
 def fetch_data(month, day)
     page = Nokogiri::HTML(open("http://www.imdb.com/search/name?birth_monthday=#{month}-#{day}"))
@@ -24,6 +23,7 @@ def fetch_data(month, day)
 end
 
 def scrape_page(page, res_arr)
+    # each of the variables below are arrays with the respective data
     name_arr = scrape_name(page)
     photo_url_arr = scrape_photo_url(page)
     profile_url_arr = scrape_profile_url(page)

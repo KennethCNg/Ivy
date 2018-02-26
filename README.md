@@ -1,4 +1,4 @@
-IMDB Web Scraper
+# IMDB Web Scraper
 
 This project was a coding challenge. Given a month and date, the script should return a JSON object of all actors/actress with the respective birthday in this format:
 

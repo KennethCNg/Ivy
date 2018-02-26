@@ -1,8 +1,8 @@
 require 'sinatra'
 require 'json'
-load './final_scraper.rb'
+load './web_scraper.rb'
 
-get '/' do
+get '/birthday/:month/:day' do
     content_type :json
-    fetch_data.to_json
+    fetch_data(params["month"], params["day"]).to_json
 end

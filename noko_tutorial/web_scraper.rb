@@ -4,8 +4,8 @@ require 'pry'
 
 HEADER = "http://www.imdb.com"
 
-def fetch_data
-    page = Nokogiri::HTML(open('http://www.imdb.com/search/name?birth_monthday=02-02&start=646&ref_=rlm'))
+def fetch_data(month, day)
+    page = Nokogiri::HTML(open("http://www.imdb.com/search/name?birth_monthday=#{month}-#{day}"))
     res_arr = []
     
     url = scrape_page(page, res_arr)
